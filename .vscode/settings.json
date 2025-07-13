@@ -1,6 +1,11 @@
 {
   "cSpell.words": [
     "ICONDIR",
+    "IDAT",
+    "idats",
+    "IEND",
+    "IHDR",
+    "paeth",
     "pingico"
   ],
   "deno.enablePaths": [
