@@ -1,8 +1,10 @@
 {
   "cSpell.words": [
+    "ICONDIR",
     "pingico"
   ],
   "deno.enablePaths": [
+    "./tests",
     "./mod.ts"
   ]
 }

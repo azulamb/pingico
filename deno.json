@@ -3,14 +3,14 @@
     ".": "./mod.ts"
   },
   "tasks": {
-    "start": ""
+    "test": "deno test --allow-read tests/all.test.ts"
   },
   "lock": false,
   "lint": {
-    "include": ["./src", "./mod.ts", "deno.json"]
+    "include": ["./src", "./tests", "./mod.ts", "deno.json"]
   },
   "fmt": {
-    "include": ["./src", "./mod.ts", "deno.json"],
+    "include": ["./src", "./tests", "./mod.ts", "deno.json"],
     "singleQuote": true
   }
 }

@@ -1,7 +1,9 @@
-function pngToIco(png: Uint8Array): {
+interface IcoData {
   header: Uint8Array;
   block: Uint8Array;
-} {
+}
+
+function pngToIco(png: Uint8Array): IcoData {
   // Parse width and height from IHDR chunk of the PNG
   if (png.byteLength < 24) {
     throw new Error('Invalid PNG image');
@@ -43,9 +45,9 @@ function pngToIco(png: Uint8Array): {
 }
 
 export async function pingico(
-  images: (Blob | ArrayBuffer | Uint8Array)[],
+  ...images: (Blob | ArrayBuffer | Uint8Array)[]
 ): Promise<Blob> {
-  const list: Uint8Array[] = await Promise.all(
+  const entries: IcoData[] = await Promise.all(
     images.map(async (image, index) => {
       if (image instanceof Uint8Array) {
         return image;
@@ -70,7 +72,7 @@ export async function pingico(
     });
   });
 
-  const count = list.length;
+  const count = entries.length;
   if (count === 0) {
     return new Blob([]);
   }
@@ -85,7 +87,6 @@ export async function pingico(
   iconDir[5] = (count >> 8) & 0xff;
 
   // Each entry is 16 bytes
-  const entries = list.map((png) => pngToIco(png));
   const dirTable = new Uint8Array(count * 16);
 
   let offset = 6 + count * 16;
