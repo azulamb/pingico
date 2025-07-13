@@ -1,1 +1,1 @@
-import * as libs from './src/pingico.ts';
+export * from './src/pingico.ts';
