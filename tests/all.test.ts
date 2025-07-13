@@ -9,6 +9,14 @@ Deno.test('Single icon', async () => {
   assert.assertEquals(blobData, ico, `Single icon data does not match.`);
 });
 
+Deno.test('Single biggest icon', async () => {
+  const png = await Deno.readFile('./tests/icon_256.png');
+  const ico = await Deno.readFile('./tests/icon_256.ico');
+  const blob = await pingico(png);
+  const blobData = new Uint8Array(await blob.arrayBuffer());
+  assert.assertEquals(blobData, ico, `Single icon data does not match.`);
+});
+
 Deno.test('Multi icon', async () => {
   const pings = await Promise.all([
     16,
