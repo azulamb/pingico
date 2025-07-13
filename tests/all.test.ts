@@ -17,7 +17,7 @@ Deno.test('Single biggest icon', async () => {
   assert.assertEquals(blobData, ico, `Single icon data does not match.`);
 });
 
-/*Deno.test('Multi icon', async () => {
+Deno.test('Multi icon', async () => {
   const pings = await Promise.all([
     16,
     24,
@@ -31,4 +31,4 @@ Deno.test('Single biggest icon', async () => {
   const blob = await pingico(...pings);
   const blobData = new Uint8Array(await blob.arrayBuffer());
   assert.assertEquals(blobData, ico, `Multi icon data does not match.`);
-});*/
+});
