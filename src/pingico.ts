@@ -3,10 +3,121 @@ interface IcoData {
   block: Uint8Array;
 }
 
-import { decode } from 'https://deno.land/x/pngs@0.1.1/mod.ts';
+async function inflate(data: Uint8Array): Promise<Uint8Array> {
+  const ds = new DecompressionStream('deflate');
+  const stream = new Blob([data]).stream().pipeThrough(ds);
+  const ab = await new Response(stream).arrayBuffer();
+  return new Uint8Array(ab);
+}
 
-function pngToIco(png: Uint8Array): IcoData {
-  const { image, width, height } = decode(png);
+async function decodePng(png: Uint8Array): Promise<{
+  width: number;
+  height: number;
+  image: Uint8Array;
+}> {
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  for (let i = 0; i < signature.length; i++) {
+    if (png[i] !== signature[i]) {
+      throw new Error('Invalid PNG');
+    }
+  }
+
+  let width = 0;
+  let height = 0;
+  let bitDepth = 0;
+  let colorType = 0;
+  const idats: Uint8Array[] = [];
+  let offset = 8;
+  while (offset < png.length) {
+    const length = view.getUint32(offset);
+    const type = String.fromCharCode(
+      png[offset + 4],
+      png[offset + 5],
+      png[offset + 6],
+      png[offset + 7],
+    );
+    if (type === 'IHDR') {
+      width = view.getUint32(offset + 8);
+      height = view.getUint32(offset + 12);
+      bitDepth = png[offset + 16];
+      colorType = png[offset + 17];
+    } else if (type === 'IDAT') {
+      idats.push(png.subarray(offset + 8, offset + 8 + length));
+    } else if (type === 'IEND') {
+      break;
+    }
+    offset += length + 12;
+  }
+
+  if (bitDepth !== 8 || colorType !== 6) {
+    throw new Error('Unsupported PNG format');
+  }
+
+  const total = idats.reduce((n, c) => n + c.length, 0);
+  const compressed = new Uint8Array(total);
+  let pos = 0;
+  for (const chunk of idats) {
+    compressed.set(chunk, pos);
+    pos += chunk.length;
+  }
+  const raw = await inflate(compressed);
+
+  const bpp = 4;
+  const rowBytes = width * bpp;
+  const image = new Uint8Array(width * height * 4);
+  let inPos = 0;
+  let outPos = 0;
+
+  const paeth = (a: number, b: number, c: number): number => {
+    const p = a + b - c;
+    const pa = Math.abs(p - a);
+    const pb = Math.abs(p - b);
+    const pc = Math.abs(p - c);
+    if (pa <= pb && pa <= pc) return a;
+    if (pb <= pc) return b;
+    return c;
+  };
+
+  for (let y = 0; y < height; y++) {
+    const filter = raw[inPos++];
+    if (filter === 0) {
+      image.set(raw.subarray(inPos, inPos + rowBytes), outPos);
+    } else if (filter === 1) {
+      for (let x = 0; x < rowBytes; x++) {
+        const left = x >= bpp ? image[outPos + x - bpp] : 0;
+        image[outPos + x] = (raw[inPos + x] + left) & 0xff;
+      }
+    } else if (filter === 2) {
+      for (let x = 0; x < rowBytes; x++) {
+        const up = y > 0 ? image[outPos + x - rowBytes] : 0;
+        image[outPos + x] = (raw[inPos + x] + up) & 0xff;
+      }
+    } else if (filter === 3) {
+      for (let x = 0; x < rowBytes; x++) {
+        const left = x >= bpp ? image[outPos + x - bpp] : 0;
+        const up = y > 0 ? image[outPos + x - rowBytes] : 0;
+        image[outPos + x] = (raw[inPos + x] + ((left + up) >> 1)) & 0xff;
+      }
+    } else if (filter === 4) {
+      for (let x = 0; x < rowBytes; x++) {
+        const a = x >= bpp ? image[outPos + x - bpp] : 0;
+        const b = y > 0 ? image[outPos + x - rowBytes] : 0;
+        const c = y > 0 && x >= bpp ? image[outPos + x - rowBytes - bpp] : 0;
+        image[outPos + x] = (raw[inPos + x] + paeth(a, b, c)) & 0xff;
+      }
+    } else {
+      throw new Error(`Unsupported filter type: ${filter}`);
+    }
+    inPos += rowBytes;
+    outPos += rowBytes;
+  }
+
+  return { width, height, image };
+}
+
+async function pngToIco(png: Uint8Array): Promise<IcoData> {
+  const { width, height, image } = await decodePng(png);
 
   const header = new Uint8Array(16);
   header[0] = width >= 256 ? 0 : width;
@@ -87,30 +198,23 @@ function pngToIco(png: Uint8Array): IcoData {
 export async function pingico(
   ...images: (Blob | ArrayBuffer | Uint8Array)[]
 ): Promise<Blob> {
-  const entries: IcoData[] = await Promise.all(
-    images.map(async (image, index) => {
-      if (image instanceof Uint8Array) {
-        return image;
-      }
-      if (image instanceof Blob) {
-        return new Uint8Array(await image.arrayBuffer());
-      }
-      if (image instanceof ArrayBuffer) {
-        return new Uint8Array(image);
-      }
-
+  const buffers: Uint8Array[] = [];
+  for (const [index, image] of images.entries()) {
+    if (image instanceof Uint8Array) {
+      buffers.push(image);
+    } else if (image instanceof Blob) {
+      buffers.push(new Uint8Array(await image.arrayBuffer()));
+    } else if (image instanceof ArrayBuffer) {
+      buffers.push(new Uint8Array(image));
+    } else {
       console.warn(`Unsupported data: [${index}]`);
-      return null;
-    }),
-  ).then((buffers) => {
-    return buffers.filter((buffer) => {
-      return buffer !== null;
-    });
-  }).then((buffers) => {
-    return buffers.map((buffer) => {
-      return pngToIco(buffer);
-    });
-  });
+    }
+  }
+
+  const entries: IcoData[] = [];
+  for (const buffer of buffers) {
+    entries.push(await pngToIco(buffer));
+  }
 
   const count = entries.length;
   if (count === 0) {
