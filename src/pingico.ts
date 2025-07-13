@@ -3,45 +3,85 @@ interface IcoData {
   block: Uint8Array;
 }
 
-function pngToIco(png: Uint8Array): IcoData {
-  // Parse width and height from IHDR chunk of the PNG
-  if (png.byteLength < 24) {
-    throw new Error('Invalid PNG image');
-  }
+import { decode } from 'https://deno.land/x/pngs@0.1.1/mod.ts';
 
-  // IHDR chunk starts at byte 8 after the 8 byte PNG signature
-  const width = (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19];
-  const height = (png[20] << 24) | (png[21] << 16) | (png[22] << 8) | png[23];
+function pngToIco(png: Uint8Array): IcoData {
+  const { image, width, height } = decode(png);
 
   const header = new Uint8Array(16);
-
-  // Width & height are a single byte. 0 means 256.
   header[0] = width >= 256 ? 0 : width;
   header[1] = height >= 256 ? 0 : height;
-
-  header[2] = 0; // color count (0 if >= 256 colors)
-  header[3] = 0; // reserved
-
-  // Planes and bit count. For PNG we set planes = 1 and bitcount = 32.
+  header[2] = 0;
+  header[3] = 0;
   header[4] = 1;
   header[5] = 0;
   header[6] = 32;
   header[7] = 0;
 
-  // bytes in resource (little endian)
-  const size = png.byteLength;
+  const dibHeader = new Uint8Array(40);
+  const view = new DataView(dibHeader.buffer);
+  view.setUint32(0, 40, true);
+  view.setInt32(4, width, true);
+  view.setInt32(8, height * 2, true);
+  view.setUint16(12, 1, true);
+  view.setUint16(14, 32, true);
+  view.setUint32(16, 0, true);
+  const maskRow = Math.ceil(width / 32) * 4;
+  const andMask = new Uint8Array(maskRow * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const a = image[(y * width + x) * 4 + 3];
+      if (a < 12) {
+        const byteIndex = ((height - 1 - y) * maskRow) + (x >> 3);
+        const bit = 7 - (x & 7);
+        andMask[byteIndex] |= 1 << bit;
+      }
+    }
+  }
+
+  view.setUint32(20, width * height * 4 + andMask.length, true);
+  view.setUint32(24, 0, true);
+  view.setUint32(28, 0, true);
+  view.setUint32(32, 0, true);
+  view.setUint32(36, 0, true);
+
+  const pixelData = new Uint8Array(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const src = (y * width + x) * 4;
+      const dst = ((height - 1 - y) * width + x) * 4;
+      const a = image[src + 3];
+      if (a < 12) {
+        pixelData[dst] = 0;
+        pixelData[dst + 1] = 0;
+        pixelData[dst + 2] = 0;
+      } else {
+        pixelData[dst] = image[src + 2];
+        pixelData[dst + 1] = image[src + 1];
+        pixelData[dst + 2] = image[src];
+      }
+      pixelData[dst + 3] = a;
+    }
+  }
+
+  const block = new Uint8Array(
+    dibHeader.length + pixelData.length + andMask.length,
+  );
+  block.set(dibHeader, 0);
+  block.set(pixelData, dibHeader.length);
+  block.set(andMask, dibHeader.length + pixelData.length);
+
+  const size = block.length;
   header[8] = size & 0xff;
   header[9] = (size >> 8) & 0xff;
   header[10] = (size >> 16) & 0xff;
   header[11] = (size >> 24) & 0xff;
-
-  // offset will be filled in later when generating the ico file
   header[12] = 0;
   header[13] = 0;
   header[14] = 0;
   header[15] = 0;
 
-  return { header, block: png };
+  return { header, block };
 }
 
 export async function pingico(
