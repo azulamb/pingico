@@ -14,13 +14,13 @@ export async function pingFileToIco(
 
 if (import.meta.main) {
   if (Deno.args.length < 2) {
-    console.error('Usage: deno run --allow-read --allow-write mod.ts <file1> <file2> ... <output>');
+    console.error(
+      'Usage: deno run --allow-read --allow-write mod.ts <file1> <file2> ... <output>',
+    );
     Deno.exit(1);
   }
-  const files = Deno.args.map((arg) =>{
-    return new URL(arg, import.meta.url);
-  });
-  const outputFile = <URL>files.pop();
+  const files = [...Deno.args];
+  const outputFile = <string> files.pop();
   const icoBlob = await pingFileToIco(...files);
   await Deno.writeFile(outputFile, new Uint8Array(await icoBlob.arrayBuffer()));
 }
