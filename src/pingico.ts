@@ -1,5 +1,11 @@
-function pngToIco(png: Uint8Array) {
-  return png;
+function pngToIco(png: Uint8Array): {
+  header: Uint8Array;
+  block: Uint8Array;
+} {
+  return {
+    header: new Uint8Array(16),
+    block: png,
+  };
 }
 
 export async function pingico(
