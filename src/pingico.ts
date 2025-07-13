@@ -139,10 +139,12 @@ async function pngToIco(png: Uint8Array): Promise<IcoData> {
   view.setUint32(16, 0, true);
   const maskRow = Math.ceil(width / 32) * 4;
   const andMask = new Uint8Array(maskRow * height);
+  const strict = width >= 256;
+  const maskThreshold = strict ? 10 : 12;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const a = image[(y * width + x) * 4 + 3];
-      if (a < 12) {
+      if (a < maskThreshold) {
         const byteIndex = ((height - 1 - y) * maskRow) + (x >> 3);
         const bit = 7 - (x & 7);
         andMask[byteIndex] |= 1 << bit;
@@ -162,7 +164,7 @@ async function pngToIco(png: Uint8Array): Promise<IcoData> {
       const src = (y * width + x) * 4;
       const dst = ((height - 1 - y) * width + x) * 4;
       const a = image[src + 3];
-      if (a < 12) {
+      if (!strict && a < 12) {
         pixelData[dst] = 0;
         pixelData[dst + 1] = 0;
         pixelData[dst + 2] = 0;
