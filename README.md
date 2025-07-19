@@ -27,7 +27,7 @@ deno run --allow-read --allow-write jsr:@azulamb/pingico file_0.png file_1.png .
 
 ## Browser
 
-import `./src/pingico.ts`
+`jsr:@azulamb/pingico/lib`
 
 ## Sample and test
 

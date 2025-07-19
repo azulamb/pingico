@@ -1,9 +1,10 @@
 {
   "name": "@azulamb/pingico",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./lib": "./src/pingico.ts"
   },
   "tasks": {
     "sample": "deno run --allow-read --allow-write ./mod.ts tests/icon_16.png tests/icon_24.png tests/icon_32.png tests/icon_48.png tests/icon_256.png ./sample.ico",
