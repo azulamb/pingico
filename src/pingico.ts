@@ -197,6 +197,12 @@ async function pngToIco(png: Uint8Array): Promise<IcoData> {
   return { header, block };
 }
 
+/**
+ * Converts PNG images to ICO format.
+ * @param images Array of image data (Blob, ArrayBuffer, or Uint8Array)
+ * @returns Blob containing the ICO file data.
+ * @throws Error if the input images are not valid PNGs or if the format is unsupported.
+ */
 export async function pingico(
   ...images: (Blob | ArrayBuffer | Uint8Array)[]
 ): Promise<Blob> {

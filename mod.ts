@@ -1,7 +1,18 @@
 import { pingico as convert } from './src/pingico.ts';
 
+/**
+ * Converts PNG images to ICO format.
+ * @param images Array of image data (Blob, ArrayBuffer, or Uint8Array)
+ * @returns Blob containing the ICO file data.
+ * @throws Error if the input images are not valid PNGs or if the format is unsupported.
+ */
 export const pingico = convert;
 
+/**
+ * Converts PNG files to ICO format function only Deno.
+ * @param files Array of file paths or URLs to PNG images.
+ * @returns
+ */
 export async function pingFileToIco(
   ...files: (string | URL)[]
 ): Promise<Blob> {
