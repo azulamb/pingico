@@ -5,7 +5,8 @@ PNG to ICO.
 https://jsr.io/@azulamb/pingico
 
 ```ts
-import { pingico } from "jsr:@azulamb/pingico";
+import { pingico } from "jsr:@azulamb/pingico/lib";
+// or import { pingico } from "jsr:@azulamb/pingico";
 
 const png = await pingico(await Deno.readFile('./tests/icon_16.png'));
 // Get ico Blob.
@@ -22,7 +23,7 @@ const ico = await pingFileToIco('./tests/icon_16.png');
 ## Command
 
 ```sh
-deno run --allow-read --allow-write jsr:@azulamb/pingico file_0.png file_1.png ... ./output_icon.ico
+deno run --allow-read --allow-write jsr:@azulamb/pingico file_0.png file_1.png ... ./output.ico
 ```
 
 ## Browser

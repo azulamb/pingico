@@ -1,5 +1,5 @@
 import * as assert from 'jsr:@std/assert';
-import { pingico } from '../src/pingico.ts';
+import { pingico } from '../mod.ts';
 
 Deno.test('Single icon', async () => {
   const png = await Deno.readFile('./tests/icon_16.png');
