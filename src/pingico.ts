@@ -3,7 +3,7 @@ interface IcoData {
   block: Uint8Array;
 }
 
-async function inflate(data: Uint8Array): Promise<Uint8Array> {
+async function inflate(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate');
   const stream = new Blob([data]).stream().pipeThrough(ds);
   const ab = await new Response(stream).arrayBuffer();

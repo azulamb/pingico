@@ -1,21 +1,22 @@
 {
   "name": "@azulamb/pingico",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts",
     "./lib": "./src/pingico.ts"
   },
   "tasks": {
+    "build": "deno bundle --minify --output ./docs/app.js ./src/browser.ts",
     "sample": "deno run --allow-read --allow-write ./mod.ts tests/icon_16.png tests/icon_24.png tests/icon_32.png tests/icon_48.png tests/icon_256.png ./sample.ico",
     "test": "deno test --allow-read tests/all.test.ts"
   },
   "lock": false,
   "lint": {
-    "include": ["./src", "./tests", "./mod.ts", "deno.json"]
+    "include": ["./docs", "./src", "./tests", "./mod.ts", "deno.json"]
   },
   "fmt": {
-    "include": ["./src", "./tests", "./mod.ts", "deno.json"],
+    "include": ["./docs", "./src", "./tests", "./mod.ts", "deno.json"],
     "singleQuote": true
   }
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>pingico web</title>
+    <meta name="description" content="Ping to ico service.">
+    <link rel="shortcut icon" href="./favicon.ico">
+    <link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon.png">
+    <script src="./app.js" defer></script>
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        margin: 0;
+        display: grid;
+        grid-template-rows: 2rem 2rem auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        height: 2rem;
+        justify-content: space-between;
+        box-sizing: border-box;
+        padding: 0 0.5rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      header > div {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 0;
+      }
+      body > div:last-child {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-direction: column;
+      }
+      #icons {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      #icons img {
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>pingico web</h1>
+      <div>
+        <a
+          href="https://github.com/azulamb/pingico"
+          target="_blank"
+          rel="noopener noreferrer"
+        >GitHub</a>
+        <a
+          href="https://jsr.io/@azulamb/pingico"
+          target="_blank"
+          rel="noopener noreferrer"
+        >JSR</a>
+      </div>
+    </header>
+    <div class="buttons">
+      <button id="reset">Reset</button>
+      <input type="file" id="images" multiple />
+      <button id="download">Download</button>
+    </div>
+    <div>
+      Drop files.
+      <div id="icons"></div>
+    </div>
+  </body>
+</html>
